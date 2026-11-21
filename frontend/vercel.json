@@ -1,0 +1,12 @@
+﻿{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://research-methodology-17.onrender.com/api/:path*"
+    },
+    {
+      "source": "/media/:path*",
+      "destination": "https://research-methodology-17.onrender.com/media/:path*"
+    }
+  ]
+}
