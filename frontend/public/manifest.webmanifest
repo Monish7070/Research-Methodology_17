@@ -1,0 +1,19 @@
+{
+  "name": "Urban Vision AI — Field Capture",
+  "short_name": "Urban Vision",
+  "description": "Record municipal road footage from a phone camera and send it to the AI damage-detection pipeline.",
+  "start_url": "/capture",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1c33",
+  "theme_color": "#0b1c33",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
