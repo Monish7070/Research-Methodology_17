@@ -626,13 +626,22 @@ def process_frame(
     return results
 
 
-def load_explainability_model(weights):
-    """Load the YOLO model plus the raw network/Detect head once per worker."""
-    model = YOLO(str(weights))
+def load_explainability_model(weights=None, model=None):
+    """Reuse an existing YOLO model or load one for standalone LayerCAM."""
+    if model is None:
+        if weights is None:
+            raise ValueError("weights or model is required")
+        model = YOLO(str(weights))
+
     net = model.model
     net.eval()
     head = net.model[-1]
-    class_to_id = {str(name).lower(): int(class_id) for class_id, name in model.names.items()}
+
+    class_to_id = {
+        str(name).lower(): int(class_id)
+        for class_id, name in model.names.items()
+    }
+
     return model, net, head, class_to_id
 
 

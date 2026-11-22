@@ -16,7 +16,6 @@ import csv
 import json
 from pathlib import Path
 
-import cv2
 
 _MODEL_CACHE: dict[str, object] = {}
 
@@ -50,26 +49,42 @@ def demo_detections(image_path, labels_csv):
 
 
 def yolo_detections(image_path, weights=None, conf=0.25, model=None, imgsz=640):
+    """Run memory-conscious YOLO inference on one image."""
     if model is None:
         if not weights:
             raise ValueError("weights or model is required for yolo detection")
         model = load_model(weights)
 
-    result = model.predict(source=str(image_path), conf=conf, imgsz=imgsz, verbose=False)[0]
-    out = []
-    if result.boxes is not None:
-        for b in result.boxes:
-            cid = int(b.cls.item())
-            out.append(
-                {
-                    "class_name": result.names[cid],
-                    "confidence": float(b.conf.item()),
-                    "bbox": [float(x) for x in b.xyxy[0].tolist()],
-                    "source": "yolo",
-                }
-            )
-    return out
+    results = model.predict(
+        source=str(image_path),
+        conf=conf,
+        imgsz=imgsz,
+        device="cpu",
+        batch=1,
+        stream=False,
+        verbose=False,
+        save=False,
+    )
 
+    out = []
+    try:
+        result = results[0]
+
+        if result.boxes is not None:
+            for b in result.boxes:
+                cid = int(b.cls.item())
+                out.append(
+                    {
+                        "class_name": result.names[cid],
+                        "confidence": float(b.conf.item()),
+                        "bbox": [float(x) for x in b.xyxy[0].tolist()],
+                        "source": "yolo",
+                    }
+                )
+    finally:
+        del results
+
+    return out
 
 def analyze_images(
     image_dir,
@@ -88,8 +103,8 @@ def analyze_images(
     total = len(images)
 
     for index, img_path in enumerate(images, start=1):
-        if cv2.imread(str(img_path)) is None:
-            print("Skipping unreadable image:", img_path)
+        if not img_path.is_file():
+            print("Skipping missing image:", img_path)
             continue
         if mode == "demo":
             dets = demo_detections(img_path, labels_csv)

@@ -40,6 +40,9 @@ STAGE_DEFINITIONS = [
 _RUNNING: dict[int, threading.Thread] = {}
 _RUNNING_LOCK = threading.Lock()
 
+# Allow only one memory-intensive processing job at a time.
+_PROCESSING_LOCK = threading.Lock()
+
 
 def initial_stages() -> list[dict]:
     return [
@@ -66,7 +69,9 @@ def start_job_async(job_id: int) -> None:
 
 def _run_job_safe(job_id: int) -> None:
     try:
-        _run_job(job_id)
+        with _PROCESSING_LOCK:
+            logger.info("Job %s acquired processing lock", job_id)
+            _run_job(job_id)
     except Exception as exc:  # pragma: no cover - defensive
         logger.exception("Job %s crashed", job_id)
         db = SessionLocal()
@@ -284,6 +289,9 @@ def _run_job(job_id: int) -> None:
 
         job.detections_count = total_detections
         db.commit()
+
+        # Release YOLO detection records before LayerCAM processing.
+        del detection_records
 
         # Attach the upload-time location (if the operator entered one) to detections.
         if video.latitude is not None and video.longitude is not None:

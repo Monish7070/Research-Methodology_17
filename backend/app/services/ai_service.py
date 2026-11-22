@@ -55,7 +55,7 @@ def get_explainability_model():
     with _EXPLAIN_LOCK:
         if _EXPLAIN is None or _EXPLAIN_PATH != weights:
             logger.info("Preparing LayerCAM network from %s", weights)
-            _EXPLAIN = gradcam_yolo.load_explainability_model(weights)
+            _EXPLAIN = gradcam_yolo.load_explainability_model(model=model)
             _EXPLAIN_PATH = weights
         return _EXPLAIN
 
